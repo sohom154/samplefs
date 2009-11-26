@@ -32,6 +32,7 @@
 #include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/sched.h>
+#include <linux/backing-dev.h>
 #include "samplefs.h"
 
 /* helpful if this is different than other fs */
@@ -39,6 +40,9 @@
 
 extern struct inode_operations sfs_dir_inode_ops;
 extern struct inode_operations sfs_file_inode_ops;
+extern struct file_operations sfs_file_operations;
+extern struct address_space_operations sfs_aops;
+
 static void samplefs_put_super(struct super_block *sb)
 {
 	struct samplefs_sb_info *sfs_sb;
@@ -70,6 +74,10 @@ struct inode *samplefs_get_inode(struct super_block *sb,
 		inode_init_owner(inode, dir, mode);
 		inode->i_blocks = 0;
 		inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
+		inode->i_mapping->a_ops = &sfs_aops;
+		mapping_set_gfp_mask(inode->i_mapping, GFP_HIGHUSER);
+		mapping_set_unevictable(inode->i_mapping);
+
 		switch (mode & S_IFMT) {
 			default:
 				init_special_inode(inode, mode, dev);
@@ -77,6 +85,7 @@ struct inode *samplefs_get_inode(struct super_block *sb,
 			case S_IFREG:
 				printk(KERN_INFO "file inode\n");
 				inode->i_op = &sfs_file_inode_ops;
+				inode->i_fop =  &sfs_file_operations;
 				break;
 			case S_IFDIR:
 				inode->i_op = &sfs_dir_inode_ops;
