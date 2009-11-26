@@ -1,1 +1,7 @@
 This is the samplefs source code
+
+filesystem.dia can be viewed using a graphical editor called "dia".
+To install dia on Fedora,
+$ dnf install dia
+To install dia on Debian/Ubuntu,
+$ apt-get install dia
